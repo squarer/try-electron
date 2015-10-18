@@ -1,0 +1,21 @@
+{
+  "name": "electron-demo",
+  "version": "1.0.0",
+  "description": "electron demo app",
+  "main": "app.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/squarer/electron-demo.git"
+  },
+  "author": "squarer <squarerliao@gmail.com> https://github.com/squarer/",
+  "license": "MIT",
+  "dependencies": {
+    "bootstrap": "^3.3.5",
+    "datatables": "^1.10.9",
+    "jquery": "^2.1.4",
+    "lowdb": "^0.10.2"
+  }
+}
