@@ -20,13 +20,57 @@
         </ul>
       </div>
       <div class="main">
-        <form class="form-inline">
-          <div class="form-group">
-            <label for="vendor">vendor name</label>
-            <input type="text" class="form-control" name="vendor" id="vendor" />
+        <span id="new" type="button" class="btn btn-primary" data-toggle="modal" data-target="#newModal"><span class="glyphicon glyphicon-plus"></span></span>
+        <button id="clear" type="button" class="btn btn-danger pull-right" data-toggle="modal" data-target="#dataConfirmModal">Clear All</button>
+        <div id="dataConfirmModal" data-action="multiple" class="modal fade" role="dialog" aria-labelledby="dataConfirmLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h3 id="dataConfirmLabel">Please Confirm</h3>
+              </div>
+              <div class="modal-body">
+                <p id="confirmMessage"></p>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                <a class="btn btn-danger" id="dataConfirmOK">Delete</a>
+              </div>
+            </div>
           </div>
-          <button id="submit" class="btn btn-primary" type="submit">submit</button>
-        </form>
+        </div>
+        <div class="modal fade" id="newModal" tabIndex="-1" role="dialog" aria-labelledby="newModalLabel">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="newModalLabel">New Customer</h4>
+              </div>
+              <div class="modal-body">
+                <form data-action="new">
+                  <input type="hidden" id="customerId" value='-1' />
+                  <div class="form-group">
+                    <label for="customer">customer name</label>
+                    <input type="text" class="form-control" name="name" id="name" />
+                  </div>
+                  <div class="form-group">
+                    <label for="addr">address</label>
+                    <input type="text" class="form-control" name="addr" id="addr" />
+                  </div>
+                  <div class="form-group">
+                    <label for="phone">phone</label>
+                    <input type="text" class="form-control" name="phone" id="phone" />
+                  </div>
+                  <div class="form-group">
+                    <label for="contact">contact</label>
+                    <input type="text" class="form-control" name="contact" id="contact" />
+                  </div>
+                  <button id="submit" class="btn btn-primary" type="submit">Submit</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="content">
           <table class="table table-striped">
           </table>
@@ -42,34 +86,135 @@
     var db = low('db.json');
 
     $(function() {
-      $('[name=vendor]').focus();
+      $('[name=customer]').focus();
 
       render();
 
       function render() {
-        var vendors = db('vendor');
+        var customers = db('customer');
         var arr = [];
 
-        vendors.forEach(function(val) {
-          arr.push([val.name]);
+        customers.forEach(function(val) {
+          arr.push([val.id, val.name, val.addr, val.phone, val.contact, '']);
         });
 
         $('table').DataTable({
           bDestroy: true,
           data: arr,
-          columns: [
-            { title: 'name'}
-          ]
+          columnDefs: [
+            { title: 'id', targets: 0 },
+            { title: 'name', targets: 1 },
+            { title: 'address', targets: 2 },
+            { title: 'phone', targets: 3 },
+            { title: 'contact', targets: 4 },
+            { title: 'func', targets: 5, className: 'text-center', searchable: false, orderable: false }
+          ],
+          createdRow: function(row, data, index) {
+            var id = data[0];
+            var editTag = '<a style="padding-right: 10px;" data-edit=' + id + ' href="#" data-toggle="modal" data-target="#newModal"><span class="glyphicon glyphicon-pencil"></span></a>';
+            var deleteTag = '<a data-delete=' + id + ' href="#" data-toggle="modal" data-target="#dataConfirmModal"><span class="glyphicon glyphicon-remove"></span></a>';
+            $('td', row).eq(5).html(editTag + ' ' + deleteTag);
+          }
+        });
+
+        $('a[data-edit]').click(function() {
+          var id = $(this).attr('data-edit');
+          $('#customerId').val(id);
+          $('form').attr('data-action', 'edit');
+          $('#newModalLabel').text('Edit Customer');
+        });
+
+        $('a[data-delete]').click(function() {
+          var id = $(this).attr('data-delete');
+          $('#customerId').val(id);
+          $('#confirmMessage').text('delete row id: ' + id);
+          $('#dataConfirmModal').attr('data-action', 'single');
         });
       }
+
+      $('#new').click(function() {
+        $('#customerId').val(-1);
+        $('form').attr('data-action', 'new');
+        $('#newModalLabel').text('New customer');
+      });
+
+      $('#clear').click(function() {
+        $('#confirmMessage').text('You are about to delete all records, make sure you want to do it.');
+        $('#dataConfirmModal').attr('data-action', 'multiple');
+      });
 
       $('form').submit(function(e) {
         e.preventDefault();
 
-        var name = $('#vendor').val();
-        db('vendor').push({ name: name });
+        if ($('#name').val().trim() == '') {
+          $('#name').parent().addClass('has-error');
+          return false;
+        }
+
+        if ($(this).attr('data-action') == 'new') {
+          var lastRow = db('customer').chain().sortByOrder('id', 'desc').take(1).value();
+          var maxId = lastRow == undefined || lastRow.length == 0 ? 1 : lastRow[0].id + 1;
+
+          db('customer').push({
+            id: maxId,
+            name: $('#name').val(),
+            addr: $('#addr').val(),
+            phone: $('#phone').val(),
+            contact: $('#contact').val()
+          });
+        } else {
+          var id = parseInt($('#customerId').val());
+          db('customer').chain().find({ id: id })
+            .assign({
+              name: $('#name').val(),
+              addr: $('#addr').val(),
+              phone: $('#phone').val(),
+              contact: $('#contact').val()
+            }).value();
+        }
+
+        $('#newModal').modal('hide');
         render();
       });
+
+      $('#newModal').on('show.bs.modal', function() {
+        var id = parseInt($('#customerId').val());
+        var customer = db('customer').find({ id: id });
+
+        if (customer === undefined) {
+          return;
+        }
+
+        $('#name').val(customer.name);
+        $('#addr').val(customer.addr);
+        $('#phone').val(customer.phone);
+        $('#contact').val(customer.contact);
+      })
+
+      $('#newModal').on('shown.bs.modal', function() {
+        $('#name').focus();
+      });
+
+      $('#newModal').on('hidden.bs.modal', function() {
+        $('#name').val('');
+        $('#addr').val('');
+        $('#phone').val('');
+        $('#contact').val('');
+        $('#name').parent().removeClass('has-error');
+      });
+
+      $('#dataConfirmOK').on('click', function() {
+        if ($('#dataConfirmModal').attr('data-action') == 'multiple') {
+          delete db.object.customer;
+          db.save();
+        } else {
+          var id = parseInt($('#customerId').val());
+          db('customer').remove({ id: id });
+        }
+
+        $('#dataConfirmModal').modal('hide');
+        render();
+      })
     });
   </script>
 </body>
