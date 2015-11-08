@@ -1,0 +1,32 @@
+{
+  "customer": [
+    {
+      "id": 1,
+      "name": "305 inc.",
+      "addr": "Kalimdor",
+      "phone": "12345678",
+      "contact": "Arthas Menethil"
+    }
+  ],
+  "quotation": [
+    {
+      "id": 1,
+      "customerName": "305 inc.",
+      "date": "2015-11-14",
+      "items": [
+        {
+          "id": 1,
+          "name": "foo",
+          "quantity": 1,
+          "price": 100
+        },
+        {
+          "id": 2,
+          "name": "bar",
+          "quantity": 1,
+          "price": 100
+        }
+      ]
+    }
+  ]
+}
