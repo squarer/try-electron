@@ -10,12 +10,18 @@
 <body>
   <div class="container-fluid">
       <div class="sidebar">
-        <ul class="nav nav-sidebar">
+        <ul class="nav">
           <li class="active">
-            <a href="#">Home</a>
+            <a href="#">Customer</a>
           </li>
-          <li class="active">
+          <li>
+            <a href="#">Ｑuotation</a>
+          </li>
+          <li>
             <a href="#">History</a>
+          </li>
+          <li>
+            <a href="#">Settings</a>
           </li>
         </ul>
       </div>
@@ -86,8 +92,6 @@
     var db = low('db.json');
 
     $(function() {
-      $('[name=customer]').focus();
-
       render();
 
       function render() {
@@ -215,6 +219,11 @@
         $('#dataConfirmModal').modal('hide');
         render();
       })
+
+      $('.nav > li').on('click', function() {
+        $('.nav > li').removeClass('active');
+        $(this).addClass('active');
+      });
     });
   </script>
 </body>
